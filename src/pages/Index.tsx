@@ -46,11 +46,11 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard title="Total Sales" value={stats.totalSales.toLocaleString()} icon={ShoppingCart} trend="up" subtitle="units sold" />
-        <StatCard title="Total Revenue" value={`$${stats.totalRevenue.toLocaleString()}`} icon={DollarSign} trend="up" subtitle="lifetime" />
+        <StatCard title="Total Revenue" value={`₹${stats.totalRevenue.toLocaleString()}`} icon={DollarSign} trend="up" subtitle="lifetime" />
         <StatCard title="Products" value={stats.totalProducts} icon={Package} trend="neutral" subtitle="unique products" />
         <StatCard title="Top Product" value={stats.topProduct} icon={TrendingUp} trend="up" subtitle="highest revenue" />
         <StatCard title="Lowest Product" value={stats.lowestProduct} icon={TrendingDown} trend="down" subtitle="needs attention" />
-        <StatCard title="Avg Order" value={`$${stats.avgOrderValue.toFixed(2)}`} icon={BarChart3} trend="neutral" subtitle="per transaction" />
+        <StatCard title="Avg Order" value={`₹${stats.avgOrderValue.toFixed(2)}`} icon={BarChart3} trend="neutral" subtitle="per transaction" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

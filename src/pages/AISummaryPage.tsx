@@ -25,14 +25,14 @@ export default function AISummaryPage() {
       const categories = computeCategoryPerformance(salesData);
 
       const dataSummary = `
-Overall: ${stats.totalSales} units sold, $${stats.totalRevenue} total revenue, ${stats.totalProducts} products.
+Overall: ${stats.totalSales} units sold, ₹${stats.totalRevenue} total revenue, ${stats.totalProducts} products.
 Top product: ${stats.topProduct}, Lowest: ${stats.lowestProduct}.
 
 Products (name, category, revenue, qty, trend):
-${products.map(p => `- ${p.productName} (${p.category}): $${p.totalRevenue}, ${p.totalQuantity} units, ${p.trend}`).join('\n')}
+${products.map(p => `- ${p.productName} (${p.category}): ₹${p.totalRevenue}, ${p.totalQuantity} units, ${p.trend}`).join('\n')}
 
 Categories (name, revenue, qty):
-${categories.map(c => `- ${c.category}: $${c.totalRevenue}, ${c.totalQuantity} units, ${c.productCount} products`).join('\n')}
+${categories.map(c => `- ${c.category}: ₹${c.totalRevenue}, ${c.totalQuantity} units, ${c.productCount} products`).join('\n')}
 
 Date range: ${salesData[0]?.dateOfSale} to ${salesData[salesData.length - 1]?.dateOfSale}
       `.trim();

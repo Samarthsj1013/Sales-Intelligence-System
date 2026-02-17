@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
               {categories.map(cat => (
                 <tr key={cat.category} className="border-b border-border/50">
                   <td className="py-2.5 text-foreground font-medium">{cat.category}</td>
-                  <td className="py-2.5 text-right text-foreground">${cat.totalRevenue.toLocaleString()}</td>
+                  <td className="py-2.5 text-right text-foreground">₹{cat.totalRevenue.toLocaleString()}</td>
                   <td className="py-2.5 text-right text-muted-foreground">{cat.totalQuantity.toLocaleString()}</td>
                   <td className="py-2.5 text-right text-muted-foreground">{cat.productCount}</td>
                 </tr>
