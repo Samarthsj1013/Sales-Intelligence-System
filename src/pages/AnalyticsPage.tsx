@@ -1,16 +1,17 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { useSales } from '@/context/SalesContext';
+import { useSales, useFilteredSales } from '@/context/SalesContext';
 import { SalesTrendChart, ProductComparisonChart, CategoryPieChart } from '@/components/Charts';
-import { computeTimeSeries, computeCategoryPerformance } from '@/lib/analytics';
+import { computeCategoryPerformance } from '@/lib/analytics';
+import FilterBar from '@/components/FilterBar';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3 } from 'lucide-react';
 
 export default function AnalyticsPage() {
   const { salesData } = useSales();
+  const filteredData = useFilteredSales();
   const navigate = useNavigate();
-  const timeSeries = useMemo(() => computeTimeSeries(salesData), [salesData]);
-  const categories = useMemo(() => computeCategoryPerformance(salesData), [salesData]);
+  const categories = useMemo(() => computeCategoryPerformance(filteredData), [filteredData]);
 
   if (salesData.length === 0) {
     return (
@@ -32,6 +33,8 @@ export default function AnalyticsPage() {
         <p className="text-sm text-muted-foreground mt-1">Charts and visualizations for your sales data</p>
       </div>
 
+      <FilterBar />
+
       <SalesTrendChart />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -39,7 +42,6 @@ export default function AnalyticsPage() {
         <CategoryPieChart />
       </div>
 
-      {/* Category breakdown table */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6">
         <h3 className="text-sm font-semibold text-foreground mb-4">Category Breakdown</h3>
         <div className="overflow-x-auto">

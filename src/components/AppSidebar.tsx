@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { BarChart3, Upload, TrendingUp, Package, Brain, LayoutDashboard } from 'lucide-react';
+import { BarChart3, Upload, TrendingUp, Package, Brain, LayoutDashboard, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -12,6 +13,7 @@ const navItems = [
 
 export default function AppSidebar() {
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col z-50">
@@ -48,11 +50,27 @@ export default function AppSidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border">
-        <div className="glass-card p-3">
-          <p className="text-xs text-muted-foreground">Powered by AI</p>
-          <p className="text-xs text-primary font-medium mt-1">Lovable Cloud</p>
-        </div>
+      <div className="p-4 border-t border-sidebar-border space-y-3">
+        {user && (
+          <div className="flex items-center gap-3">
+            {user.user_metadata?.avatar_url ? (
+              <img src={user.user_metadata.avatar_url} alt="" className="w-8 h-8 rounded-full" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                {(user.user_metadata?.full_name || user.email || '?')[0].toUpperCase()}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground truncate">
+                {user.user_metadata?.full_name || user.email}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            </div>
+            <button onClick={signOut} className="text-muted-foreground hover:text-danger transition-colors" title="Sign out">
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );

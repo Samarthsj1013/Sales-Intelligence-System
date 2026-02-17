@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { useSales } from '@/context/SalesContext';
+import { useFilteredSales } from '@/context/SalesContext';
 import { computeTimeSeries, computeCategoryPerformance, computeProductSummaries } from '@/lib/analytics';
+import { motion } from 'framer-motion';
 
 const CHART_COLORS = [
   'hsl(160, 60%, 45%)',
@@ -13,9 +13,11 @@ const CHART_COLORS = [
   'hsl(190, 70%, 50%)',
 ];
 
+const tooltipStyle = { backgroundColor: 'hsl(220, 18%, 10%)', border: '1px solid hsl(220, 14%, 18%)', borderRadius: '8px', color: 'hsl(210, 20%, 92%)' };
+
 export function SalesTrendChart() {
-  const { salesData } = useSales();
-  const timeSeries = useMemo(() => computeTimeSeries(salesData), [salesData]);
+  const filteredData = useFilteredSales();
+  const timeSeries = useMemo(() => computeTimeSeries(filteredData), [filteredData]);
 
   if (timeSeries.length === 0) return null;
 
@@ -27,9 +29,7 @@ export function SalesTrendChart() {
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 18%)" />
           <XAxis dataKey="date" stroke="hsl(215, 15%, 55%)" fontSize={11} tickFormatter={(v) => v.slice(5)} />
           <YAxis stroke="hsl(215, 15%, 55%)" fontSize={11} />
-          <Tooltip
-            contentStyle={{ backgroundColor: 'hsl(220, 18%, 10%)', border: '1px solid hsl(220, 14%, 18%)', borderRadius: '8px', color: 'hsl(210, 20%, 92%)' }}
-          />
+          <Tooltip contentStyle={tooltipStyle} />
           <Line type="monotone" dataKey="revenue" stroke="hsl(160, 60%, 45%)" strokeWidth={2} dot={false} />
           <Line type="monotone" dataKey="quantity" stroke="hsl(210, 80%, 60%)" strokeWidth={2} dot={false} />
         </LineChart>
@@ -39,8 +39,8 @@ export function SalesTrendChart() {
 }
 
 export function ProductComparisonChart() {
-  const { salesData } = useSales();
-  const products = useMemo(() => computeProductSummaries(salesData).slice(0, 8), [salesData]);
+  const filteredData = useFilteredSales();
+  const products = useMemo(() => computeProductSummaries(filteredData).slice(0, 8), [filteredData]);
 
   if (products.length === 0) return null;
 
@@ -52,9 +52,7 @@ export function ProductComparisonChart() {
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 18%)" />
           <XAxis dataKey="productName" stroke="hsl(215, 15%, 55%)" fontSize={10} angle={-30} textAnchor="end" height={80} />
           <YAxis stroke="hsl(215, 15%, 55%)" fontSize={11} />
-          <Tooltip
-            contentStyle={{ backgroundColor: 'hsl(220, 18%, 10%)', border: '1px solid hsl(220, 14%, 18%)', borderRadius: '8px', color: 'hsl(210, 20%, 92%)' }}
-          />
+          <Tooltip contentStyle={tooltipStyle} />
           <Bar dataKey="totalRevenue" fill="hsl(160, 60%, 45%)" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
@@ -63,8 +61,8 @@ export function ProductComparisonChart() {
 }
 
 export function CategoryPieChart() {
-  const { salesData } = useSales();
-  const categories = useMemo(() => computeCategoryPerformance(salesData), [salesData]);
+  const filteredData = useFilteredSales();
+  const categories = useMemo(() => computeCategoryPerformance(filteredData), [filteredData]);
 
   if (categories.length === 0) return null;
 
@@ -78,9 +76,7 @@ export function CategoryPieChart() {
               <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip
-            contentStyle={{ backgroundColor: 'hsl(220, 18%, 10%)', border: '1px solid hsl(220, 14%, 18%)', borderRadius: '8px', color: 'hsl(210, 20%, 92%)' }}
-          />
+          <Tooltip contentStyle={tooltipStyle} />
         </PieChart>
       </ResponsiveContainer>
       <div className="flex flex-wrap gap-3 mt-4 justify-center">
