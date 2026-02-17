@@ -1,17 +1,27 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Package, BarChart3 } from 'lucide-react';
-import { useSales } from '@/context/SalesContext';
+import { useSales, useFilteredSales } from '@/context/SalesContext';
 import { computeDashboardStats } from '@/lib/analytics';
 import StatCard from '@/components/StatCard';
 import { SalesTrendChart, ProductComparisonChart, CategoryPieChart } from '@/components/Charts';
+import FilterBar from '@/components/FilterBar';
 import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
-  const { salesData } = useSales();
-  const stats = useMemo(() => computeDashboardStats(salesData), [salesData]);
+  const { salesData, isLoading } = useSales();
+  const filteredData = useFilteredSales();
+  const stats = useMemo(() => computeDashboardStats(filteredData), [filteredData]);
   const navigate = useNavigate();
   const hasData = salesData.length > 0;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-muted-foreground">Loading your data...</p>
+      </div>
+    );
+  }
 
   if (!hasData) {
     return (
@@ -39,10 +49,14 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">{salesData.length.toLocaleString('en-IN')} records loaded</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">{filteredData.length.toLocaleString('en-IN')} of {salesData.length.toLocaleString('en-IN')} records</p>
+        </div>
       </div>
+
+      <FilterBar />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard title="Total Sales" value={stats.totalSales.toLocaleString('en-IN')} icon={ShoppingCart} trend="up" subtitle="units sold" />

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, FileSpreadsheet, Plus, Trash2, Sparkles } from 'lucide-react';
+import { Upload, FileSpreadsheet, Plus, Trash2, Sparkles, Loader2 } from 'lucide-react';
 import { useSales } from '@/context/SalesContext';
 import { parseCSV } from '@/lib/csvParser';
 import { generateSampleData } from '@/lib/sampleData';
@@ -9,23 +9,27 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 export default function UploadPage() {
-  const { salesData, setSalesData } = useSales();
+  const { salesData, saveSalesData } = useSales();
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [manualRows, setManualRows] = useState<Partial<SalesRecord>[]>([
     { productName: '', category: '', dateOfSale: '', quantitySold: 0, revenue: 0 },
   ]);
 
   const handleFile = useCallback(async (file: File) => {
+    setIsSaving(true);
     try {
       const records = await parseCSV(file);
-      setSalesData(records);
-      toast.success(`Loaded ${records.length} records from CSV`);
+      await saveSalesData(records);
+      toast.success(`Loaded & saved ${records.length} records from CSV`);
       navigate('/');
     } catch (err: any) {
       toast.error(err.message || 'Failed to parse CSV');
+    } finally {
+      setIsSaving(false);
     }
-  }, [setSalesData, navigate]);
+  }, [saveSalesData, navigate]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -35,11 +39,18 @@ export default function UploadPage() {
     else toast.error('Please upload a CSV file');
   }, [handleFile]);
 
-  const handleSampleData = () => {
-    const data = generateSampleData();
-    setSalesData(data);
-    toast.success(`Loaded ${data.length} sample records`);
-    navigate('/');
+  const handleSampleData = async () => {
+    setIsSaving(true);
+    try {
+      const data = generateSampleData();
+      await saveSalesData(data);
+      toast.success(`Loaded & saved ${data.length} sample records`);
+      navigate('/');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save sample data');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const addManualRow = () => {
@@ -54,7 +65,7 @@ export default function UploadPage() {
     setManualRows(prev => prev.filter((_, i) => i !== index));
   };
 
-  const submitManualData = () => {
+  const submitManualData = async () => {
     const records: SalesRecord[] = manualRows
       .filter(r => r.productName)
       .map((r, i) => ({
@@ -71,17 +82,31 @@ export default function UploadPage() {
       return;
     }
 
-    setSalesData([...salesData, ...records]);
-    toast.success(`Added ${records.length} records`);
-    navigate('/');
+    setIsSaving(true);
+    try {
+      await saveSalesData([...salesData, ...records]);
+      toast.success(`Added & saved ${records.length} records`);
+      navigate('/');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save data');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
     <div className="space-y-8 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Upload Sales Data</h1>
-        <p className="text-sm text-muted-foreground mt-1">Import CSV files or enter data manually</p>
+        <p className="text-sm text-muted-foreground mt-1">Import CSV files or enter data manually. Data is saved automatically.</p>
       </div>
+
+      {isSaving && (
+        <div className="flex items-center gap-2 text-sm text-primary">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Saving to database...
+        </div>
+      )}
 
       {/* CSV Upload */}
       <motion.div
@@ -113,7 +138,8 @@ export default function UploadPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <button
           onClick={handleSampleData}
-          className="w-full glass-card p-4 flex items-center gap-3 hover:border-accent/50 transition-all"
+          disabled={isSaving}
+          className="w-full glass-card p-4 flex items-center gap-3 hover:border-accent/50 transition-all disabled:opacity-50"
         >
           <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-accent" />
@@ -140,38 +166,11 @@ export default function UploadPage() {
         <div className="space-y-3">
           {manualRows.map((row, i) => (
             <div key={i} className="grid grid-cols-6 gap-2 items-center">
-              <input
-                placeholder="Product Name"
-                value={row.productName || ''}
-                onChange={(e) => updateManualRow(i, 'productName', e.target.value)}
-                className="col-span-1 bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <input
-                placeholder="Category"
-                value={row.category || ''}
-                onChange={(e) => updateManualRow(i, 'category', e.target.value)}
-                className="bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <input
-                type="date"
-                value={row.dateOfSale || ''}
-                onChange={(e) => updateManualRow(i, 'dateOfSale', e.target.value)}
-                className="bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <input
-                type="number"
-                placeholder="Qty"
-                value={row.quantitySold || ''}
-                onChange={(e) => updateManualRow(i, 'quantitySold', Number(e.target.value))}
-                className="bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <input
-                type="number"
-                placeholder="Revenue"
-                value={row.revenue || ''}
-                onChange={(e) => updateManualRow(i, 'revenue', Number(e.target.value))}
-                className="bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              />
+              <input placeholder="Product Name" value={row.productName || ''} onChange={(e) => updateManualRow(i, 'productName', e.target.value)} className="col-span-1 bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+              <input placeholder="Category" value={row.category || ''} onChange={(e) => updateManualRow(i, 'category', e.target.value)} className="bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+              <input type="date" value={row.dateOfSale || ''} onChange={(e) => updateManualRow(i, 'dateOfSale', e.target.value)} className="bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+              <input type="number" placeholder="Qty" value={row.quantitySold || ''} onChange={(e) => updateManualRow(i, 'quantitySold', Number(e.target.value))} className="bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+              <input type="number" placeholder="Revenue" value={row.revenue || ''} onChange={(e) => updateManualRow(i, 'revenue', Number(e.target.value))} className="bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
               <button onClick={() => removeManualRow(i)} className="text-muted-foreground hover:text-danger transition-colors justify-self-center">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -181,7 +180,8 @@ export default function UploadPage() {
 
         <button
           onClick={submitManualData}
-          className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          disabled={isSaving}
+          className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
         >
           Add to Dataset
         </button>

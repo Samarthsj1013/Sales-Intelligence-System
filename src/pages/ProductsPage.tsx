@@ -1,16 +1,17 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus, Package } from 'lucide-react';
-import { useSales } from '@/context/SalesContext';
-import { computeProductSummaries, computeCategoryPerformance } from '@/lib/analytics';
+import { useSales, useFilteredSales } from '@/context/SalesContext';
+import { computeProductSummaries } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import FilterBar from '@/components/FilterBar';
 
 export default function ProductsPage() {
   const { salesData } = useSales();
+  const filteredData = useFilteredSales();
   const navigate = useNavigate();
-  const products = useMemo(() => computeProductSummaries(salesData), [salesData]);
-  const categories = useMemo(() => computeCategoryPerformance(salesData), [salesData]);
+  const products = useMemo(() => computeProductSummaries(filteredData), [filteredData]);
 
   if (salesData.length === 0) {
     return (
@@ -72,12 +73,13 @@ export default function ProductsPage() {
         <p className="text-sm text-muted-foreground mt-1">{products.length} products analyzed</p>
       </div>
 
+      <FilterBar />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ProductTable title="🏆 Top 5 Products" data={top5} highlight="success" />
         <ProductTable title="⚠️ Bottom 5 Products" data={bottom5} highlight="danger" />
       </div>
 
-      {/* All products table */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6">
         <h3 className="text-sm font-semibold text-foreground mb-4">All Products</h3>
         <div className="overflow-x-auto">
