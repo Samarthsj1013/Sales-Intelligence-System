@@ -54,7 +54,7 @@ export default function ProductsPage() {
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="text-sm font-medium text-foreground">₹{p.totalRevenue.toLocaleString()}</p>
+                <p className="text-sm font-medium text-foreground">₹{p.totalRevenue.toLocaleString('en-IN')}</p>
                 <p className="text-xs text-muted-foreground">{p.totalQuantity} units</p>
               </div>
               <TrendIcon trend={p.trend} />
@@ -97,9 +97,9 @@ export default function ProductsPage() {
                 <tr key={p.productName} className="border-b border-border/30">
                   <td className="py-2.5 text-foreground font-medium">{p.productName}</td>
                   <td className="py-2.5 text-muted-foreground">{p.category}</td>
-                  <td className="py-2.5 text-right text-foreground">₹{p.totalRevenue.toLocaleString()}</td>
-                  <td className="py-2.5 text-right text-muted-foreground">{p.totalQuantity.toLocaleString()}</td>
-                  <td className="py-2.5 text-right text-muted-foreground">₹{p.avgRevenue.toFixed(0)}</td>
+                  <td className="py-2.5 text-right text-foreground">₹{p.totalRevenue.toLocaleString('en-IN')}</td>
+                  <td className="py-2.5 text-right text-muted-foreground">{p.totalQuantity.toLocaleString('en-IN')}</td>
+                  <td className="py-2.5 text-right text-muted-foreground">₹{Number(p.avgRevenue.toFixed(0)).toLocaleString('en-IN')}</td>
                   <td className="py-2.5 flex justify-center"><TrendIcon trend={p.trend} /></td>
                 </tr>
               ))}
