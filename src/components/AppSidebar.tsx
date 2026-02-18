@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { BarChart3, Upload, TrendingUp, Package, Brain, LayoutDashboard, LogOut, Sun, Moon } from 'lucide-react';
+import { BarChart3, Upload, TrendingUp, Package, Brain, LayoutDashboard, LogOut, Sun, Moon, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -7,6 +7,7 @@ import { useTheme } from '@/context/ThemeContext';
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/upload', icon: Upload, label: 'Upload Data' },
+  { to: '/history', icon: History, label: 'History' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/products', icon: Package, label: 'Products' },
   { to: '/ai-summary', icon: Brain, label: 'AI Summary' },

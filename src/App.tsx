@@ -12,6 +12,7 @@ import UploadPage from "./pages/UploadPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import ProductsPage from "./pages/ProductsPage";
 import AISummaryPage from "./pages/AISummaryPage";
+import HistoryPage from "./pages/HistoryPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
@@ -41,6 +42,7 @@ function ProtectedLayout() {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/upload" element={<UploadPage />} />
+            <Route path="/history" element={<HistoryPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/ai-summary" element={<AISummaryPage />} />

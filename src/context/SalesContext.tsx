@@ -4,10 +4,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
+export interface DatasetInfo {
+  name: string;
+  recordCount: number;
+  dateRange: string;
+  uploadedAt: string;
+}
+
 interface SalesContextType {
   salesData: SalesRecord[];
   setSalesData: (data: SalesRecord[]) => void;
-  saveSalesData: (records: SalesRecord[]) => Promise<void>;
+  saveSalesData: (records: SalesRecord[], datasetName: string) => Promise<void>;
   aiAnalysis: AIAnalysis | null;
   setAiAnalysis: (analysis: AIAnalysis | null) => void;
   isAnalyzing: boolean;
@@ -15,6 +22,12 @@ interface SalesContextType {
   isLoading: boolean;
   filters: FilterState;
   setFilters: (f: FilterState) => void;
+  activeDataset: string | null;
+  datasets: DatasetInfo[];
+  loadDataset: (name: string) => Promise<void>;
+  clearActiveDataset: () => void;
+  deleteDataset: (name: string) => Promise<void>;
+  loadDatasets: () => Promise<void>;
 }
 
 export interface FilterState {
@@ -35,23 +48,61 @@ export function SalesProvider({ children }: { children: ReactNode }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
+  const [activeDataset, setActiveDataset] = useState<string | null>(null);
+  const [datasets, setDatasets] = useState<DatasetInfo[]>([]);
 
-  // Load data from database on user login
+  // Load dataset list on user login (but NOT data — dashboard stays empty)
   useEffect(() => {
     if (!user) {
       setSalesDataState([]);
+      setActiveDataset(null);
+      setDatasets([]);
       return;
     }
-    loadSalesData();
+    loadDatasets();
   }, [user]);
 
-  const loadSalesData = async () => {
+  const loadDatasets = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('sales_data')
+        .select('dataset_name, date_of_sale, created_at')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const grouped: Record<string, { count: number; minDate: string; maxDate: string; uploadedAt: string }> = {};
+      (data || []).forEach((r: any) => {
+        const name = r.dataset_name || 'Default';
+        if (!grouped[name]) {
+          grouped[name] = { count: 0, minDate: r.date_of_sale, maxDate: r.date_of_sale, uploadedAt: r.created_at };
+        }
+        grouped[name].count++;
+        if (r.date_of_sale < grouped[name].minDate) grouped[name].minDate = r.date_of_sale;
+        if (r.date_of_sale > grouped[name].maxDate) grouped[name].maxDate = r.date_of_sale;
+        if (r.created_at < grouped[name].uploadedAt) grouped[name].uploadedAt = r.created_at;
+      });
+
+      setDatasets(Object.entries(grouped).map(([name, info]) => ({
+        name,
+        recordCount: info.count,
+        dateRange: `${info.minDate} — ${info.maxDate}`,
+        uploadedAt: info.uploadedAt,
+      })));
+    } catch (err) {
+      console.error('Failed to load datasets:', err);
+    }
+  }, [user]);
+
+  const loadDataset = useCallback(async (name: string) => {
     if (!user) return;
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('sales_data')
         .select('*')
+        .eq('dataset_name', name)
         .order('date_of_sale', { ascending: true });
 
       if (error) throw error;
@@ -66,25 +117,45 @@ export function SalesProvider({ children }: { children: ReactNode }) {
       }));
 
       setSalesDataState(records);
-    } catch (err: any) {
-      console.error('Failed to load sales data:', err);
+      setActiveDataset(name);
+      setAiAnalysis(null);
+      setFilters(defaultFilters);
+    } catch (err) {
+      console.error('Failed to load dataset:', err);
+      toast.error('Failed to load dataset');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
-  const saveSalesData = useCallback(async (records: SalesRecord[]) => {
+  const clearActiveDataset = useCallback(() => {
+    setSalesDataState([]);
+    setActiveDataset(null);
+    setAiAnalysis(null);
+    setFilters(defaultFilters);
+  }, []);
+
+  const deleteDataset = useCallback(async (name: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from('sales_data')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('dataset_name', name);
+      if (error) throw error;
+      if (activeDataset === name) clearActiveDataset();
+      await loadDatasets();
+      toast.success(`Deleted dataset "${name}"`);
+    } catch (err) {
+      console.error('Failed to delete dataset:', err);
+      toast.error('Failed to delete dataset');
+    }
+  }, [user, activeDataset, clearActiveDataset, loadDatasets]);
+
+  const saveSalesData = useCallback(async (records: SalesRecord[], datasetName: string) => {
     if (!user) return;
 
-    // Delete existing data and insert new
-    const { error: deleteError } = await supabase
-      .from('sales_data')
-      .delete()
-      .eq('user_id', user.id);
-
-    if (deleteError) throw deleteError;
-
-    // Insert in batches of 500
     const rows = records.map(r => ({
       user_id: user.id,
       product_name: r.productName,
@@ -92,6 +163,7 @@ export function SalesProvider({ children }: { children: ReactNode }) {
       date_of_sale: r.dateOfSale,
       quantity_sold: r.quantitySold,
       revenue: r.revenue,
+      dataset_name: datasetName,
     }));
 
     for (let i = 0; i < rows.length; i += 500) {
@@ -101,7 +173,9 @@ export function SalesProvider({ children }: { children: ReactNode }) {
     }
 
     setSalesDataState(records);
-  }, [user]);
+    setActiveDataset(datasetName);
+    await loadDatasets();
+  }, [user, loadDatasets]);
 
   const setSalesData = useCallback((data: SalesRecord[]) => {
     setSalesDataState(data);
@@ -119,6 +193,12 @@ export function SalesProvider({ children }: { children: ReactNode }) {
       isLoading,
       filters,
       setFilters,
+      activeDataset,
+      datasets,
+      loadDataset,
+      clearActiveDataset,
+      deleteDataset,
+      loadDatasets,
     }}>
       {children}
     </SalesContext.Provider>
