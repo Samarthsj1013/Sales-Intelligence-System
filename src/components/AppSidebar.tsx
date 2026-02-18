@@ -1,7 +1,8 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { BarChart3, Upload, TrendingUp, Package, Brain, LayoutDashboard, LogOut } from 'lucide-react';
+import { BarChart3, Upload, TrendingUp, Package, Brain, LayoutDashboard, LogOut, Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -14,6 +15,7 @@ const navItems = [
 export default function AppSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col z-50">
@@ -51,6 +53,13 @@ export default function AppSidebar() {
       </nav>
 
       <div className="p-4 border-t border-sidebar-border space-y-3">
+        <button
+          onClick={toggleTheme}
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200"
+        >
+          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+        </button>
         {user && (
           <div className="flex items-center gap-3">
             {user.user_metadata?.avatar_url ? (

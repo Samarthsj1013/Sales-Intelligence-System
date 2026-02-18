@@ -1,12 +1,15 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Package, BarChart3 } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Package, BarChart3, Download } from 'lucide-react';
 import { useSales, useFilteredSales } from '@/context/SalesContext';
 import { computeDashboardStats } from '@/lib/analytics';
 import StatCard from '@/components/StatCard';
 import { SalesTrendChart, ProductComparisonChart, CategoryPieChart } from '@/components/Charts';
 import FilterBar from '@/components/FilterBar';
 import { useNavigate } from 'react-router-dom';
+import { exportSalesDataCSV, exportProductsPDF } from '@/lib/exportUtils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
   const { salesData, isLoading } = useSales();
@@ -54,6 +57,15 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">{filteredData.length.toLocaleString('en-IN')} of {salesData.length.toLocaleString('en-IN')} records</p>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm"><Download className="w-4 h-4 mr-1" /> Export</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => exportSalesDataCSV(filteredData)}>Sales Data (CSV)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => exportProductsPDF(filteredData)}>Product Report (PDF)</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <FilterBar />
