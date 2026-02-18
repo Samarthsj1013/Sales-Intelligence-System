@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Brain, TrendingUp, Search, Target, AlertTriangle, Lightbulb, Loader2 } from 'lucide-react';
+import { Brain, TrendingUp, Search, Target, AlertTriangle, Lightbulb, Loader2, Download } from 'lucide-react';
 import { useSales } from '@/context/SalesContext';
 import { computeProductSummaries, computeCategoryPerformance, computeDashboardStats } from '@/lib/analytics';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { exportAIInsightsCSV, exportAIInsightsPDF } from '@/lib/exportUtils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 export default function AISummaryPage() {
   const { salesData, aiAnalysis, setAiAnalysis, isAnalyzing, setIsAnalyzing } = useSales();
@@ -80,14 +83,27 @@ Date range: ${salesData[0]?.dateOfSale} to ${salesData[salesData.length - 1]?.da
           <h1 className="text-2xl font-bold text-foreground">AI Summary</h1>
           <p className="text-sm text-muted-foreground mt-1">AI-powered analysis of your sales data</p>
         </div>
-        <button
-          onClick={runAnalysis}
-          disabled={isAnalyzing}
-          className="px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
-        >
-          {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
-          {isAnalyzing ? 'Analyzing...' : aiAnalysis ? 'Re-analyze' : 'Run AI Analysis'}
-        </button>
+        <div className="flex items-center gap-2">
+          {aiAnalysis && !isAnalyzing && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm"><Download className="w-4 h-4 mr-1" /> Export</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => exportAIInsightsCSV(aiAnalysis)}>Export CSV</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportAIInsightsPDF(aiAnalysis)}>Export PDF</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          <button
+            onClick={runAnalysis}
+            disabled={isAnalyzing}
+            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+          >
+            {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
+            {isAnalyzing ? 'Analyzing...' : aiAnalysis ? 'Re-analyze' : 'Run AI Analysis'}
+          </button>
+        </div>
       </div>
 
       {isAnalyzing && (

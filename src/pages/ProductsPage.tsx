@@ -1,11 +1,14 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus, Package } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Package, Download } from 'lucide-react';
 import { useSales, useFilteredSales } from '@/context/SalesContext';
 import { computeProductSummaries } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import FilterBar from '@/components/FilterBar';
+import { exportProductsCSV, exportProductsPDF } from '@/lib/exportUtils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 export default function ProductsPage() {
   const { salesData } = useSales();
@@ -68,9 +71,20 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Product Performance</h1>
-        <p className="text-sm text-muted-foreground mt-1">{products.length} products analyzed</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Product Performance</h1>
+          <p className="text-sm text-muted-foreground mt-1">{products.length} products analyzed</p>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm"><Download className="w-4 h-4 mr-1" /> Export</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => exportProductsCSV(filteredData)}>Export CSV</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => exportProductsPDF(filteredData)}>Export PDF</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <FilterBar />
