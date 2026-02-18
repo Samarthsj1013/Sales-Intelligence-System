@@ -7,29 +7,40 @@ import { generateSampleData } from '@/lib/sampleData';
 import { SalesRecord } from '@/types/sales';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
 
 export default function UploadPage() {
-  const { salesData, saveSalesData } = useSales();
+  const { salesData, saveSalesData, activeDataset } = useSales();
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [datasetName, setDatasetName] = useState('');
   const [manualRows, setManualRows] = useState<Partial<SalesRecord>[]>([
     { productName: '', category: '', dateOfSale: '', quantitySold: 0, revenue: 0 },
   ]);
+
+  const getDatasetName = () => {
+    const name = datasetName.trim();
+    if (!name) {
+      return `Dataset ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    return name;
+  };
 
   const handleFile = useCallback(async (file: File) => {
     setIsSaving(true);
     try {
       const records = await parseCSV(file);
-      await saveSalesData(records);
-      toast.success(`Loaded & saved ${records.length} records from CSV`);
+      const name = getDatasetName() || file.name.replace('.csv', '');
+      await saveSalesData(records, name);
+      toast.success(`Saved ${records.length} records as "${name}"`);
       navigate('/');
     } catch (err: any) {
       toast.error(err.message || 'Failed to parse CSV');
     } finally {
       setIsSaving(false);
     }
-  }, [saveSalesData, navigate]);
+  }, [saveSalesData, navigate, datasetName]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -43,8 +54,9 @@ export default function UploadPage() {
     setIsSaving(true);
     try {
       const data = generateSampleData();
-      await saveSalesData(data);
-      toast.success(`Loaded & saved ${data.length} sample records`);
+      const name = getDatasetName() || 'Sample Data';
+      await saveSalesData(data, name);
+      toast.success(`Saved ${data.length} sample records as "${name}"`);
       navigate('/');
     } catch (err: any) {
       toast.error(err.message || 'Failed to save sample data');
@@ -84,7 +96,8 @@ export default function UploadPage() {
 
     setIsSaving(true);
     try {
-      await saveSalesData([...salesData, ...records]);
+      const name = getDatasetName() || 'Manual Entry';
+      await saveSalesData([...salesData, ...records], name);
       toast.success(`Added & saved ${records.length} records`);
       navigate('/');
     } catch (err: any) {
@@ -98,8 +111,20 @@ export default function UploadPage() {
     <div className="space-y-8 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Upload Sales Data</h1>
-        <p className="text-sm text-muted-foreground mt-1">Import CSV files or enter data manually. Data is saved automatically.</p>
+        <p className="text-sm text-muted-foreground mt-1">Import CSV files or enter data manually. Each upload is saved as a named dataset.</p>
       </div>
+
+      {/* Dataset Name */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
+        <label className="text-sm font-medium text-foreground mb-2 block">Dataset Name</label>
+        <Input
+          placeholder="e.g. Q1 2026 Sales, January Report..."
+          value={datasetName}
+          onChange={(e) => setDatasetName(e.target.value)}
+          className="max-w-md"
+        />
+        <p className="text-xs text-muted-foreground mt-1.5">Leave blank for auto-generated name</p>
+      </motion.div>
 
       {isSaving && (
         <div className="flex items-center gap-2 text-sm text-primary">
@@ -112,6 +137,7 @@ export default function UploadPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
@@ -152,7 +178,7 @@ export default function UploadPage() {
       </motion.div>
 
       {/* Manual Entry */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <FileSpreadsheet className="w-4 h-4 text-primary" />
@@ -171,7 +197,7 @@ export default function UploadPage() {
               <input type="date" value={row.dateOfSale || ''} onChange={(e) => updateManualRow(i, 'dateOfSale', e.target.value)} className="bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
               <input type="number" placeholder="Qty" value={row.quantitySold || ''} onChange={(e) => updateManualRow(i, 'quantitySold', Number(e.target.value))} className="bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
               <input type="number" placeholder="Revenue" value={row.revenue || ''} onChange={(e) => updateManualRow(i, 'revenue', Number(e.target.value))} className="bg-muted/50 border border-border rounded-md px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
-              <button onClick={() => removeManualRow(i)} className="text-muted-foreground hover:text-danger transition-colors justify-self-center">
+              <button onClick={() => removeManualRow(i)} className="text-muted-foreground hover:text-destructive transition-colors justify-self-center">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>

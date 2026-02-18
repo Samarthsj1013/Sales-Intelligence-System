@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Package, BarChart3, Download } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Package, BarChart3, Download, History } from 'lucide-react';
 import { useSales, useFilteredSales } from '@/context/SalesContext';
 import { computeDashboardStats } from '@/lib/analytics';
 import StatCard from '@/components/StatCard';
@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
-  const { salesData, isLoading } = useSales();
+  const { salesData, isLoading, activeDataset, datasets } = useSales();
   const filteredData = useFilteredSales();
   const stats = useMemo(() => computeDashboardStats(filteredData), [filteredData]);
   const navigate = useNavigate();
@@ -26,7 +26,8 @@ export default function Dashboard() {
     );
   }
 
-  if (!hasData) {
+  // No active dataset — show welcome screen
+  if (!activeDataset || !hasData) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
@@ -39,12 +40,22 @@ export default function Dashboard() {
               Upload your sales data to unlock AI-powered trend analysis, demand predictions, and actionable business insights.
             </p>
           </div>
-          <button
-            onClick={() => navigate('/upload')}
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity"
-          >
-            Get Started — Upload Data
-          </button>
+          <div className="flex items-center gap-3 justify-center">
+            <button
+              onClick={() => navigate('/upload')}
+              className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity"
+            >
+              Upload New Data
+            </button>
+            {datasets.length > 0 && (
+              <button
+                onClick={() => navigate('/history')}
+                className="px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+              >
+                <History className="w-4 h-4" /> View History ({datasets.length})
+              </button>
+            )}
+          </div>
         </motion.div>
       </div>
     );
@@ -55,7 +66,9 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">{filteredData.length.toLocaleString('en-IN')} of {salesData.length.toLocaleString('en-IN')} records</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            <span className="font-medium text-primary">{activeDataset}</span> · {filteredData.length.toLocaleString('en-IN')} of {salesData.length.toLocaleString('en-IN')} records
+          </p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
