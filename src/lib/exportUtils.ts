@@ -22,13 +22,13 @@ export function exportSalesDataCSV(data: SalesRecord[]) {
 
 export function exportAIInsightsCSV(analysis: AIAnalysis) {
   const rows: string[] = ['Section,Insight'];
+  rows.push(`"summary","${analysis.summary.replace(/"/g, '""')}"`);
   const sections = ['trends', 'patterns', 'predictions', 'risks', 'insights'] as const;
   sections.forEach(s => {
     (analysis[s] || []).forEach(item => {
       rows.push(`"${s}","${item.replace(/"/g, '""')}"`);
     });
   });
-  rows.unshift(`"summary","${analysis.summary.replace(/"/g, '""')}"`);
   downloadCSV(rows.join('\n'), 'ai-insights.csv');
 }
 
@@ -48,61 +48,52 @@ export function exportProductsPDF(data: SalesRecord[]) {
   const doc = new jsPDF();
 
   // Title
-  doc.setFontSize(20);
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('Product Performance Report', 14, 22);
+  doc.text('Product Performance Report', 14, 20);
 
-  // Subtitle
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(120, 120, 120);
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, 14, 30);
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(120);
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, 14, 27);
+  doc.setTextColor(0);
 
-  // Divider
-  doc.setDrawColor(200, 200, 200);
-  doc.line(14, 34, 196, 34);
+  doc.setDrawColor(200);
+  doc.line(14, 30, 196, 30);
 
-  // Overview section
-  doc.setFontSize(13);
+  // Overview
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Overview', 14, 44);
-
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  const overviewData = [
-    ['Total Revenue', `₹${stats.totalRevenue.toLocaleString('en-IN')}`],
-    ['Total Units Sold', stats.totalSales.toLocaleString('en-IN')],
-    ['Total Products', String(stats.totalProducts)],
-    ['Top Product', stats.topProduct],
-    ['Lowest Product', stats.lowestProduct],
-    ['Avg Order Value', `₹${stats.avgOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`],
-  ];
+  doc.text('Overview', 14, 38);
 
   autoTable(doc, {
-    startY: 48,
+    startY: 42,
     head: [['Metric', 'Value']],
-    body: overviewData,
+    body: [
+      ['Total Revenue', `₹${stats.totalRevenue.toLocaleString('en-IN')}`],
+      ['Total Units Sold', stats.totalSales.toLocaleString('en-IN')],
+      ['Total Products', String(stats.totalProducts)],
+      ['Top Product', stats.topProduct],
+      ['Lowest Product', stats.lowestProduct],
+      ['Avg Order Value', `₹${stats.avgOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`],
+    ],
     theme: 'grid',
-    styles: { fontSize: 9, cellPadding: 4 },
+    styles: { fontSize: 9, cellPadding: 3 },
     headStyles: { fillColor: [41, 128, 105], textColor: 255, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [245, 245, 245] },
-    columnStyles: {
-      0: { fontStyle: 'bold', cellWidth: 60 },
-      1: { cellWidth: 'auto' },
-    },
+    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
     margin: { left: 14, right: 14 },
   });
 
   // Products table
-  const tableY = (doc as any).lastAutoTable?.finalY || 95;
-  doc.setFontSize(13);
+  const tableY = (doc as any).lastAutoTable?.finalY || 90;
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Product Breakdown', 14, tableY + 12);
+  doc.text('Product Breakdown', 14, tableY + 10);
 
   autoTable(doc, {
-    startY: tableY + 18,
-    head: [['Product', 'Category', 'Revenue (₹)', 'Quantity', 'Avg/Sale (₹)', 'Trend']],
+    startY: tableY + 14,
+    head: [['Product', 'Category', 'Revenue (₹)', 'Qty', 'Avg (₹)', 'Trend']],
     body: products.map(p => [
       p.productName,
       p.category,
@@ -112,9 +103,8 @@ export function exportProductsPDF(data: SalesRecord[]) {
       p.trend.charAt(0).toUpperCase() + p.trend.slice(1),
     ]),
     theme: 'striped',
-    styles: { fontSize: 8, cellPadding: 3 },
+    styles: { fontSize: 8, cellPadding: 2.5 },
     headStyles: { fillColor: [41, 128, 105], textColor: 255, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [248, 248, 248] },
     margin: { left: 14, right: 14 },
     didParseCell: (data) => {
       if (data.section === 'body' && data.column.index === 5) {
@@ -126,12 +116,37 @@ export function exportProductsPDF(data: SalesRecord[]) {
     },
   });
 
+  // Category breakdown
+  const catY = (doc as any).lastAutoTable?.finalY || 150;
+  const categories = computeCategoryPerformance(data);
+
+  if (catY + 40 < 270) {
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Category Breakdown', 14, catY + 10);
+
+    autoTable(doc, {
+      startY: catY + 14,
+      head: [['Category', 'Revenue (₹)', 'Quantity', 'Products']],
+      body: categories.map(c => [
+        c.category,
+        c.totalRevenue.toLocaleString('en-IN'),
+        c.totalQuantity.toLocaleString('en-IN'),
+        String(c.productCount),
+      ]),
+      theme: 'striped',
+      styles: { fontSize: 8, cellPadding: 2.5 },
+      headStyles: { fillColor: [41, 128, 105], textColor: 255, fontStyle: 'bold' },
+      margin: { left: 14, right: 14 },
+    });
+  }
+
   // Footer
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
+    doc.setTextColor(150);
     doc.text(`SalesPulse — Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 10);
   }
 
@@ -141,46 +156,36 @@ export function exportProductsPDF(data: SalesRecord[]) {
 export function exportAIInsightsPDF(analysis: AIAnalysis) {
   const doc = new jsPDF();
 
-  // Title
-  doc.setFontSize(20);
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('AI Sales Analysis Report', 14, 22);
+  doc.text('AI Sales Analysis Report', 14, 20);
 
-  // Subtitle
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(120, 120, 120);
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, 14, 30);
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(120);
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, 14, 27);
+  doc.setTextColor(0);
 
-  doc.setDrawColor(200, 200, 200);
-  doc.line(14, 34, 196, 34);
+  doc.setDrawColor(200);
+  doc.line(14, 30, 196, 30);
 
   // Summary
-  doc.setFontSize(13);
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Executive Summary', 14, 44);
+  doc.text('Executive Summary', 14, 38);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   const summaryLines = doc.splitTextToSize(analysis.summary, 178);
-  doc.text(summaryLines, 14, 52);
+  doc.text(summaryLines, 14, 45);
 
-  let y = 52 + summaryLines.length * 4.5 + 10;
-
-  const sectionColors: Record<string, [number, number, number]> = {
-    trends: [22, 163, 74],
-    patterns: [59, 130, 246],
-    predictions: [234, 179, 8],
-    risks: [220, 38, 38],
-    insights: [41, 128, 105],
-  };
+  let y = 45 + summaryLines.length * 4.5 + 8;
 
   const sections = [
-    { key: 'trends' as const, title: '📈 Trend Analysis' },
-    { key: 'patterns' as const, title: '🔍 Pattern Detection' },
-    { key: 'predictions' as const, title: '🎯 Demand Predictions' },
-    { key: 'risks' as const, title: '⚠️ Risk Identification' },
-    { key: 'insights' as const, title: '💡 Business Insights' },
+    { key: 'trends' as const, title: 'Trend Analysis' },
+    { key: 'patterns' as const, title: 'Pattern Detection' },
+    { key: 'predictions' as const, title: 'Demand Predictions' },
+    { key: 'risks' as const, title: 'Risk Identification' },
+    { key: 'insights' as const, title: 'Business Insights' },
   ];
 
   sections.forEach(({ key, title }) => {
@@ -188,37 +193,33 @@ export function exportAIInsightsPDF(analysis: AIAnalysis) {
     if (!items?.length) return;
     if (y > 255) { doc.addPage(); y = 20; }
 
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.text(title, 14, y);
-    y += 3;
-
-    // Colored underline
-    const color = sectionColors[key] || [0, 0, 0];
-    doc.setDrawColor(...color);
+    y += 2;
+    doc.setDrawColor(41, 128, 105);
     doc.setLineWidth(0.5);
-    doc.line(14, y, 80, y);
-    y += 6;
+    doc.line(14, y, 70, y);
+    y += 5;
 
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(50, 50, 50);
+    doc.setTextColor(50);
     items.forEach(item => {
       const lines = doc.splitTextToSize(`• ${item}`, 178);
       if (y + lines.length * 4.5 > 275) { doc.addPage(); y = 20; }
       doc.text(lines, 14, y);
       y += lines.length * 4.5 + 2;
     });
-    doc.setTextColor(0, 0, 0);
-    y += 6;
+    doc.setTextColor(0);
+    y += 5;
   });
 
-  // Footer
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
+    doc.setTextColor(150);
     doc.text(`SalesPulse AI Report — Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 10);
   }
 

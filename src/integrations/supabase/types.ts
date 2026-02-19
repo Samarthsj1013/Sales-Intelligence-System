@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_reports: {
+        Row: {
+          analysis: Json
+          anomalies: Json | null
+          created_at: string
+          dataset_name: string
+          id: string
+          report_type: string
+          user_id: string
+        }
+        Insert: {
+          analysis?: Json
+          anomalies?: Json | null
+          created_at?: string
+          dataset_name: string
+          id?: string
+          report_type?: string
+          user_id: string
+        }
+        Update: {
+          analysis?: Json
+          anomalies?: Json | null
+          created_at?: string
+          dataset_name?: string
+          id?: string
+          report_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
+          created_at: string
+          dataset_name: string
+          id: string
+          scope_value: string | null
+          target_scope: string
+          target_type: string
+          target_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dataset_name: string
+          id?: string
+          scope_value?: string | null
+          target_scope?: string
+          target_type?: string
+          target_value?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dataset_name?: string
+          id?: string
+          scope_value?: string | null
+          target_scope?: string
+          target_type?: string
+          target_value?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -73,6 +139,36 @@ export type Database = {
           product_name?: string
           quantity_sold?: number
           revenue?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      shared_dashboards: {
+        Row: {
+          created_at: string
+          dataset_name: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          share_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dataset_name: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          share_token?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dataset_name?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          share_token?: string
           user_id?: string
         }
         Relationships: []
