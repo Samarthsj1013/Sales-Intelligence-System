@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { useFilteredSales } from '@/context/SalesContext';
 import { computeTimeSeries, computeCategoryPerformance, computeProductSummaries } from '@/lib/analytics';
 import { motion } from 'framer-motion';
+import { Download } from 'lucide-react';
+import { downloadChartAsImage } from '@/lib/chartDownload';
 
 const CHART_COLORS = [
   'hsl(160, 60%, 45%)',
@@ -15,15 +17,27 @@ const CHART_COLORS = [
 
 const tooltipStyle = { backgroundColor: 'hsl(220, 18%, 10%)', border: '1px solid hsl(220, 14%, 18%)', borderRadius: '8px', color: 'hsl(210, 20%, 92%)' };
 
+function ChartHeader({ title, onDownload }: { title: string; onDownload: () => void }) {
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      <button onClick={onDownload} className="text-muted-foreground hover:text-foreground transition-colors" title="Download chart as image">
+        <Download className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
 export function SalesTrendChart() {
   const filteredData = useFilteredSales();
   const timeSeries = useMemo(() => computeTimeSeries(filteredData), [filteredData]);
+  const ref = useRef<HTMLDivElement>(null);
 
   if (timeSeries.length === 0) return null;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6">
-      <h3 className="text-sm font-semibold text-foreground mb-4">Sales Trend Over Time</h3>
+    <motion.div ref={ref} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6">
+      <ChartHeader title="Sales Trend Over Time" onDownload={() => downloadChartAsImage(ref.current, 'sales-trend')} />
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={timeSeries}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 18%)" />
@@ -41,12 +55,13 @@ export function SalesTrendChart() {
 export function ProductComparisonChart() {
   const filteredData = useFilteredSales();
   const products = useMemo(() => computeProductSummaries(filteredData).slice(0, 8), [filteredData]);
+  const ref = useRef<HTMLDivElement>(null);
 
   if (products.length === 0) return null;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-6">
-      <h3 className="text-sm font-semibold text-foreground mb-4">Product Revenue Comparison</h3>
+    <motion.div ref={ref} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-6">
+      <ChartHeader title="Product Revenue Comparison" onDownload={() => downloadChartAsImage(ref.current, 'product-comparison')} />
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={products}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 18%)" />
@@ -63,12 +78,13 @@ export function ProductComparisonChart() {
 export function CategoryPieChart() {
   const filteredData = useFilteredSales();
   const categories = useMemo(() => computeCategoryPerformance(filteredData), [filteredData]);
+  const ref = useRef<HTMLDivElement>(null);
 
   if (categories.length === 0) return null;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-6">
-      <h3 className="text-sm font-semibold text-foreground mb-4">Category Performance</h3>
+    <motion.div ref={ref} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-6">
+      <ChartHeader title="Category Performance" onDownload={() => downloadChartAsImage(ref.current, 'category-performance')} />
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie data={categories} dataKey="totalRevenue" nameKey="category" cx="50%" cy="50%" outerRadius={100} innerRadius={60} paddingAngle={3}>

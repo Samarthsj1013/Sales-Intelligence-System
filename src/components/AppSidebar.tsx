@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { BarChart3, Upload, TrendingUp, Package, Brain, LayoutDashboard, LogOut, Sun, Moon, History } from 'lucide-react';
+import { BarChart3, Upload, TrendingUp, Package, Brain, LayoutDashboard, LogOut, Sun, Moon, History, GitCompareArrows, Target, FileText, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -10,7 +10,11 @@ const navItems = [
   { to: '/history', icon: History, label: 'History' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/products', icon: Package, label: 'Products' },
+  { to: '/comparison', icon: GitCompareArrows, label: 'Compare' },
+  { to: '/goals', icon: Target, label: 'Goals' },
   { to: '/ai-summary', icon: Brain, label: 'AI Summary' },
+  { to: '/reports', icon: FileText, label: 'AI Reports' },
+  { to: '/share', icon: Share2, label: 'Share' },
 ];
 
 export default function AppSidebar() {
@@ -32,7 +36,7 @@ export default function AppSidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navItems.map(({ to, icon: Icon, label }) => {
           const isActive = location.pathname === to;
           return (
@@ -40,7 +44,7 @@ export default function AppSidebar() {
               key={to}
               to={to}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                 isActive
                   ? "bg-primary/10 text-primary"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"

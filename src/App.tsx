@@ -13,6 +13,11 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import ProductsPage from "./pages/ProductsPage";
 import AISummaryPage from "./pages/AISummaryPage";
 import HistoryPage from "./pages/HistoryPage";
+import ComparisonPage from "./pages/ComparisonPage";
+import GoalsPage from "./pages/GoalsPage";
+import ReportsPage from "./pages/ReportsPage";
+import SharePage from "./pages/SharePage";
+import SharedViewPage from "./pages/SharedViewPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
@@ -45,7 +50,11 @@ function ProtectedLayout() {
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/products" element={<ProductsPage />} />
+            <Route path="/comparison" element={<ComparisonPage />} />
+            <Route path="/goals" element={<GoalsPage />} />
             <Route path="/ai-summary" element={<AISummaryPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/share" element={<SharePage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
@@ -77,6 +86,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<AuthRoute />} />
+              <Route path="/shared/:token" element={<SharedViewPage />} />
               <Route path="/*" element={<ProtectedLayout />} />
             </Routes>
           </BrowserRouter>
