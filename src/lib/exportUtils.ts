@@ -147,7 +147,7 @@ export function exportProductsPDF(data: SalesRecord[]) {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(150);
-    doc.text(`SalesPulse — Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 10);
+    doc.text(`Sales Intelligence System — Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 10);
   }
 
   doc.save('product-performance.pdf');
@@ -220,7 +220,7 @@ export function exportAIInsightsPDF(analysis: AIAnalysis) {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(150);
-    doc.text(`SalesPulse AI Report — Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 10);
+    doc.text(`Sales Intelligence System AI Report — Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 10);
   }
 
   doc.save('ai-analysis.pdf');
