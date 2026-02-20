@@ -31,7 +31,7 @@ export default function AppSidebar() {
           </div>
           <div>
             <h1 className="text-sm font-bold text-foreground">Sales Intelligence</h1>
-            <p className="text-xs text-muted-foreground">Intelligence System</p>
+            <p className="text-xs text-muted-foreground">System</p>
           </div>
         </div>
       </div>

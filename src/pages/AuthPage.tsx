@@ -31,7 +31,7 @@ export default function AuthPage() {
           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto glow-primary">
             <TrendingUp className="w-8 h-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold gradient-text">SalesPulse</h1>
+          <h1 className="text-3xl font-bold gradient-text">Sales Intelligence System</h1>
           <p className="text-sm text-muted-foreground">
             AI-powered sales trend analysis and demand prediction
           </p>

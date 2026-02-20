@@ -35,7 +35,7 @@ export default function Dashboard() {
             <TrendingUp className="w-10 h-10 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold gradient-text">SalesPulse</h1>
+            <h1 className="text-3xl font-bold gradient-text">Sales Intelligence System</h1>
             <p className="text-muted-foreground mt-2 max-w-md">
               Upload your sales data to unlock AI-powered trend analysis, demand predictions, and actionable business insights.
             </p>
