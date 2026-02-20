@@ -30,8 +30,8 @@ export default function AppSidebar() {
             <TrendingUp className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-foreground">SalesPulse</h1>
-            <p className="text-xs text-muted-foreground">AI Trend Analyzer</p>
+            <h1 className="text-sm font-bold text-foreground">Sales Intelligence</h1>
+            <p className="text-xs text-muted-foreground">Intelligence System</p>
           </div>
         </div>
       </div>
