@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Package, BarChart3, Download, History } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Package, BarChart3, Download } from 'lucide-react';
 import { useSales, useFilteredSales } from '@/context/SalesContext';
 import { computeDashboardStats } from '@/lib/analytics';
 import StatCard from '@/components/StatCard';
@@ -47,14 +47,6 @@ export default function Dashboard() {
             >
               Upload New Data
             </button>
-            {datasets.length > 0 && (
-              <button
-                onClick={() => navigate('/history')}
-                className="px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
-              >
-                <History className="w-4 h-4" /> View History ({datasets.length})
-              </button>
-            )}
           </div>
         </motion.div>
       </div>

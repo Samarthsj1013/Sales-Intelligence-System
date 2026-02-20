@@ -45,26 +45,28 @@ function downloadCSV(content: string, filename: string) {
 export function exportProductsPDF(data: SalesRecord[]) {
   const products = computeProductSummaries(data);
   const stats = computeDashboardStats(data);
+  const categories = computeCategoryPerformance(data);
   const doc = new jsPDF();
+  const pageW = doc.internal.pageSize.width;
+  const pageH = doc.internal.pageSize.height;
+  const mx = 14;
 
-  // Title
+  // Header
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('Product Performance Report', 14, 20);
-
+  doc.text('Product Performance Report', mx, 20);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(120);
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, 14, 27);
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, mx, 27);
   doc.setTextColor(0);
-
   doc.setDrawColor(200);
-  doc.line(14, 30, 196, 30);
+  doc.line(mx, 30, pageW - mx, 30);
 
   // Overview
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Overview', 14, 38);
+  doc.text('Overview', mx, 38);
 
   autoTable(doc, {
     startY: 42,
@@ -82,17 +84,18 @@ export function exportProductsPDF(data: SalesRecord[]) {
     headStyles: { fillColor: [41, 128, 105], textColor: 255, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [245, 245, 245] },
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
-    margin: { left: 14, right: 14 },
+    margin: { left: mx, right: mx },
   });
 
-  // Products table
-  const tableY = (doc as any).lastAutoTable?.finalY || 90;
+  // Product Breakdown
+  let curY = (doc as any).lastAutoTable?.finalY + 12 || 100;
+  if (curY > pageH - 40) { doc.addPage(); curY = 20; }
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Product Breakdown', 14, tableY + 10);
+  doc.text('Product Breakdown', mx, curY);
 
   autoTable(doc, {
-    startY: tableY + 14,
+    startY: curY + 4,
     head: [['Product', 'Category', 'Revenue (₹)', 'Qty', 'Avg (₹)', 'Trend']],
     body: products.map(p => [
       p.productName,
@@ -103,9 +106,9 @@ export function exportProductsPDF(data: SalesRecord[]) {
       p.trend.charAt(0).toUpperCase() + p.trend.slice(1),
     ]),
     theme: 'striped',
-    styles: { fontSize: 8, cellPadding: 2.5 },
+    styles: { fontSize: 8, cellPadding: 2.5, overflow: 'linebreak' },
     headStyles: { fillColor: [41, 128, 105], textColor: 255, fontStyle: 'bold' },
-    margin: { left: 14, right: 14 },
+    margin: { left: mx, right: mx },
     didParseCell: (data) => {
       if (data.section === 'body' && data.column.index === 5) {
         const val = String(data.cell.raw).toLowerCase();
@@ -116,38 +119,35 @@ export function exportProductsPDF(data: SalesRecord[]) {
     },
   });
 
-  // Category breakdown
-  const catY = (doc as any).lastAutoTable?.finalY || 150;
-  const categories = computeCategoryPerformance(data);
+  // Category Breakdown
+  curY = (doc as any).lastAutoTable?.finalY + 12 || 200;
+  if (curY > pageH - 40) { doc.addPage(); curY = 20; }
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Category Breakdown', mx, curY);
 
-  if (catY + 40 < 270) {
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Category Breakdown', 14, catY + 10);
+  autoTable(doc, {
+    startY: curY + 4,
+    head: [['Category', 'Revenue (₹)', 'Quantity', 'Products']],
+    body: categories.map(c => [
+      c.category,
+      c.totalRevenue.toLocaleString('en-IN'),
+      c.totalQuantity.toLocaleString('en-IN'),
+      String(c.productCount),
+    ]),
+    theme: 'striped',
+    styles: { fontSize: 8, cellPadding: 2.5 },
+    headStyles: { fillColor: [41, 128, 105], textColor: 255, fontStyle: 'bold' },
+    margin: { left: mx, right: mx },
+  });
 
-    autoTable(doc, {
-      startY: catY + 14,
-      head: [['Category', 'Revenue (₹)', 'Quantity', 'Products']],
-      body: categories.map(c => [
-        c.category,
-        c.totalRevenue.toLocaleString('en-IN'),
-        c.totalQuantity.toLocaleString('en-IN'),
-        String(c.productCount),
-      ]),
-      theme: 'striped',
-      styles: { fontSize: 8, cellPadding: 2.5 },
-      headStyles: { fillColor: [41, 128, 105], textColor: 255, fontStyle: 'bold' },
-      margin: { left: 14, right: 14 },
-    });
-  }
-
-  // Footer
+  // Footer on every page
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(150);
-    doc.text(`Sales Intelligence System — Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 10);
+    doc.text(`Sales Intelligence System — Page ${i} of ${pageCount}`, mx, pageH - 10);
   }
 
   doc.save('product-performance.pdf');
