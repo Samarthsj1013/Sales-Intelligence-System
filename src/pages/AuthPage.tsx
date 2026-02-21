@@ -1,8 +1,14 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, Loader2 } from 'lucide-react';
 import { lovable } from '@/integrations/lovable/index';
+import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
 import { toast } from 'sonner';
+
+const isLovableDomain = () => {
+  const host = window.location.hostname;
+  return host.includes('lovable.app') || host.includes('lovableproject.com');
+};
 
 export default function AuthPage() {
   const [loading, setLoading] = useState(false);
@@ -10,10 +16,26 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
-      if (error) throw error;
+      if (isLovableDomain()) {
+        // Use Lovable managed OAuth on lovable.app domains
+        const { error } = await lovable.auth.signInWithOAuth("google", {
+          redirect_uri: window.location.origin,
+        });
+        if (error) throw error;
+      } else {
+        // On custom domains (Vercel, localhost), use Supabase OAuth directly
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+            skipBrowserRedirect: true,
+          },
+        });
+        if (error) throw error;
+        if (data?.url) {
+          window.location.href = data.url;
+        }
+      }
     } catch (err: any) {
       toast.error(err.message || 'Sign in failed');
       setLoading(false);
