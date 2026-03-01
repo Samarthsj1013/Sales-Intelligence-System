@@ -16,14 +16,17 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
+      console.log('[Auth] Domain:', window.location.hostname, 'isLovable:', isLovableDomain());
+      
       if (isLovableDomain()) {
-        // Use Lovable managed OAuth on lovable.app domains
-        const { error } = await lovable.auth.signInWithOAuth("google", {
+        console.log('[Auth] Using Lovable managed OAuth');
+        const result = await lovable.auth.signInWithOAuth("google", {
           redirect_uri: window.location.origin,
         });
-        if (error) throw error;
+        console.log('[Auth] Lovable OAuth result:', JSON.stringify(result));
+        if (result.error) throw result.error;
       } else {
-        // On custom domains (Vercel, localhost), use Supabase OAuth directly
+        console.log('[Auth] Using direct Supabase OAuth');
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
@@ -31,12 +34,14 @@ export default function AuthPage() {
             skipBrowserRedirect: true,
           },
         });
+        console.log('[Auth] Supabase OAuth result:', JSON.stringify({ data, error }));
         if (error) throw error;
         if (data?.url) {
           window.location.href = data.url;
         }
       }
     } catch (err: any) {
+      console.error('[Auth] Error:', err);
       toast.error(err.message || 'Sign in failed');
       setLoading(false);
     }
