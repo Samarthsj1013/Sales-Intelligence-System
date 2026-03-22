@@ -19,15 +19,14 @@ import ReportsPage from "./pages/ReportsPage";
 import SharePage from "./pages/SharePage";
 import SharedViewPage from "./pages/SharedViewPage";
 import AuthPage from "./pages/AuthPage";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
-import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
 function ProtectedLayout() {
   const { user, loading } = useAuth();
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -35,11 +34,7 @@ function ProtectedLayout() {
       </div>
     );
   }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
+  if (!user) return <Navigate to="/auth" replace />;
   return (
     <SalesProvider>
       <div className="flex min-h-screen">
@@ -77,22 +72,33 @@ function AuthRoute() {
   return <AuthPage />;
 }
 
+// Wrapper that includes AuthProvider for protected routes
+function AppWithAuth() {
+  return (
+    <AuthProvider>
+      <Routes>
+        <Route path="/auth" element={<AuthRoute />} />
+        <Route path="/*" element={<ProtectedLayout />} />
+      </Routes>
+    </AuthProvider>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <AuthProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<AuthRoute />} />
-              <Route path="/shared/:token" element={<SharedViewPage />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/*" element={<ProtectedLayout />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* These routes are OUTSIDE AuthProvider - no redirect interference */}
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/shared/:token" element={<SharedViewPage />} />
+            {/* All other routes go through AuthProvider */}
+            <Route path="/*" element={<AppWithAuth />} />
+          </Routes>
+        </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
