@@ -7,22 +7,18 @@ export default function AuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Handle the OAuth callback by exchanging the code for a session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        subscription.unsubscribe();
-        navigate('/', { replace: true });
-      }
-    });
-
-    // Also check if we already have a session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate('/', { replace: true });
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    // Exchange the code in the URL for a session
+    supabase.auth.exchangeCodeForSession(window.location.search)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Auth error:', error);
+          navigate('/auth', { replace: true });
+        } else if (data.session) {
+          navigate('/', { replace: true });
+        } else {
+          navigate('/auth', { replace: true });
+        }
+      });
   }, [navigate]);
 
   return (
