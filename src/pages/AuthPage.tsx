@@ -16,12 +16,14 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
+      const redirectTo = `${window.location.origin}/auth/callback`;
       console.log('[Auth] Domain:', window.location.hostname, 'isLovable:', isLovableDomain());
-      
+      console.log('[Auth] Redirect URL:', redirectTo);
+
       if (isLovableDomain()) {
         console.log('[Auth] Using Lovable managed OAuth');
         const result = await lovable.auth.signInWithOAuth("google", {
-          redirect_uri: window.location.origin,
+          redirect_uri: redirectTo,
         });
         console.log('[Auth] Lovable OAuth result:', JSON.stringify(result));
         if (result.error) throw result.error;
@@ -30,7 +32,7 @@ export default function AuthPage() {
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: window.location.origin,
+            redirectTo,
             skipBrowserRedirect: true,
           },
         });
@@ -63,7 +65,6 @@ export default function AuthPage() {
             AI-powered sales trend analysis and demand prediction
           </p>
         </div>
-
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
@@ -81,7 +82,6 @@ export default function AuthPage() {
           )}
           {loading ? 'Signing in...' : 'Continue with Google'}
         </button>
-
         <p className="text-xs text-muted-foreground">
           Your sales data is private and securely stored
         </p>
