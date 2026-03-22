@@ -1,14 +1,8 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, Loader2 } from 'lucide-react';
-import { lovable } from '@/integrations/lovable/index';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
 import { toast } from 'sonner';
-
-const isLovableDomain = () => {
-  const host = window.location.hostname;
-  return host.includes('lovable.app') || host.includes('lovableproject.com');
-};
 
 export default function AuthPage() {
   const [loading, setLoading] = useState(false);
@@ -17,31 +11,13 @@ export default function AuthPage() {
     setLoading(true);
     try {
       const redirectTo = `${window.location.origin}/auth/callback`;
-      console.log('[Auth] Domain:', window.location.hostname, 'isLovable:', isLovableDomain());
-      console.log('[Auth] Redirect URL:', redirectTo);
-
-      if (isLovableDomain()) {
-        console.log('[Auth] Using Lovable managed OAuth');
-        const result = await lovable.auth.signInWithOAuth("google", {
-          redirect_uri: redirectTo,
-        });
-        console.log('[Auth] Lovable OAuth result:', JSON.stringify(result));
-        if (result.error) throw result.error;
-      } else {
-        console.log('[Auth] Using direct Supabase OAuth');
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo,
-            skipBrowserRedirect: true,
-          },
-        });
-        console.log('[Auth] Supabase OAuth result:', JSON.stringify({ data, error }));
-        if (error) throw error;
-        if (data?.url) {
-          window.location.href = data.url;
-        }
-      }
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+        },
+      });
+      if (error) throw error;
     } catch (err: any) {
       console.error('[Auth] Error:', err);
       toast.error(err.message || 'Sign in failed');
